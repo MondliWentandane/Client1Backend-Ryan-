@@ -1,47 +1,21 @@
 const express = require("express");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Initialize Resend with your API key
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 // Middleware
-app.use(cors()); // Allow frontend to make requests
-app.use(express.json()); // Parse JSON request bodies
-
-// Create transporter with updated config
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  host: "smtp.gmail.com",
-  port: 465, // Changed from 587 to 465
-  secure: true, // Changed to true for port 465
-  auth: {
-    user: process.env.USER,
-    pass: process.env.APP_PASSWORD,
-  },
-  // Add these options to help with Railway
-  tls: {
-    rejectUnauthorized: false
-  },
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  socketTimeout: 10000
-});
-
-// Test transporter connection on startup
-transporter.verify(function(error, success) {
-  if (error) {
-    console.error("SMTP connection error:", error);
-  } else {
-    console.log("SMTP server is ready to send emails");
-  }
-});
+app.use(cors());
+app.use(express.json());
 
 // API endpoint to send email
 app.post("/api/send-email", async (req, res) => {
   try {
-    // Get data from frontend
     const { name, surname, email, cellno, message } = req.body;
 
     // Validate required fields
@@ -54,13 +28,10 @@ app.post("/api/send-email", async (req, res) => {
 
     console.log(`Attempting to send email from ${email}`);
 
-    // Email to send to the construction company owner
-    const mailOptions = {
-      from: {
-        name: "Construction Website Contact Form",
-        address: process.env.USER
-      },
-      to: ["mondlik34@gmail.com"], // Your email (company owner)
+    // Send email using Resend
+    const { data, error } = await resend.emails.send({
+      from: "Construction Contact Form <onboarding@resend.dev>", // Use Resend's test domain for now
+      to: ["mondlik34@gmail.com"], // Your email
       subject: `New Contact Form Submission from ${name}`,
       html: `
         <h2>New Contact Form Submission</h2>
@@ -72,12 +43,18 @@ app.post("/api/send-email", async (req, res) => {
         <hr>
         <p><em>This email was sent from your construction company website contact form.</em></p>
       `,
-    };
+      reply_to: email, // Customer can reply directly to their email
+    });
 
-    // Send email
-    await transporter.sendMail(mailOptions);
-    
-    console.log(`Email sent successfully from ${email}`);
+    if (error) {
+      console.error("Resend error:", error);
+      return res.status(500).json({ 
+        success: false, 
+        error: "Failed to send email" 
+      });
+    }
+
+    console.log(`Email sent successfully! ID: ${data.id}`);
     
     res.status(200).json({ 
       success: true, 
@@ -93,9 +70,9 @@ app.post("/api/send-email", async (req, res) => {
   }
 });
 
-// Health check endpoint (useful for Railway)
+// Health check endpoint
 app.get("/", (req, res) => {
-  res.json({ status: "Backend is running" });
+  res.json({ status: "Backend is running with Resend" });
 });
 
 // Start server
