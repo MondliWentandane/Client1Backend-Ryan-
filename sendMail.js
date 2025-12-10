@@ -21,12 +21,12 @@ const mailOptions ={
     from: {name: "Mondli Khoza",
            address: process.env.USER
     },
-    to: ["mondlik34@gmail.com"],
+    to: ["keystoneconstructionpty@gmail.com"],
     subject: "Send email using nodemailer and gmail ✔",
     text: `Hi`, // plain‑text body
-    html: `<b>Dear Miss Frank I hope this message finds you well. 
-           Please find attached our completed Task 3.9 for your 
-           review. https://docs.google.com/presentation/d/13EDBS</b>`, 
+    html: `<b>Dear Ryan I hope this message finds you well.
+           Please find attached our completed Task 3.9 for your
+           review. https://docs.google.com/presentation/d/13EDBS</b>`,
 }
 
 const sendEmail = async (transporter, mailOptions)=>{
