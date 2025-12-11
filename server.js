@@ -32,7 +32,7 @@ app.post("/api/send-email", async (req, res) => {
     const { data, error } = await resend.emails.send({
       from: "Construction Contact Form <onboarding@resend.dev>", // Use Resend's test domain for now
       to: ["mondli46401@gmail.com"], // Your email
-      subject: `New Contact Form Submission from ${name}`,
+      subject: `New Request from a Client`,
       html: `
         <h2>New Contact Form Submission</h2>
         <p><strong>Name:</strong> ${name} ${surname || ''}</p>
