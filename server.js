@@ -6,6 +6,11 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Set sender and recipient emails using environment variables (best practice)
+// Default to the correct domain to prevent the 403 error, but use Vercel envs
+const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@keystoneconstruction.co.za";
+const TO_EMAIL = process.env.TO_EMAIL || "keystoneconstructionpty@gmail.com";
+
 // Initialize Resend with your API key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -26,13 +31,14 @@ app.post("/api/send-email", async (req, res) => {
       });
     }
 
-    console.log(`Attempting to send email from ${email}`);
+    console.log(`Attempting to send email from user: ${email}`);
 
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: "Construction Contact Form <onboarding@resend.dev>", // Use Resend's test domain for now
-      to: ["keystoneconstructionpty@gmail.com"], // Your email
-      subject: `New Request from a Client`,
+      // CRITICAL UPDATE: Use the verified domain email from environment variables
+      from: `Keystone Contact Form <${FROM_EMAIL}>`,
+      to: [TO_EMAIL], // Recipient email from environment variables
+      subject: `New Request from Client: ${name}`,
       html: `
         <h2>New Contact Form Submission</h2>
         <p><strong>Name:</strong> ${name} ${surname || ''}</p>
